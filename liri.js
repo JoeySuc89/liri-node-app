@@ -6,20 +6,21 @@ let spotify = new Spotify(keys.spotify);
 let axios = require('axios');
 let inquire = require('inquirer');
 let moment = require('moment');
+let fs = require("fs");
+let skipArgCheck = false
 
 const argChecker = () => {
+  if(skipArgCheck) return false
   var noCommand = process.argv.length === 2
   var noArgs = process.argv.length === 3
   return noCommand || noArgs
 }
 
-movieThis = () => {
-  var movie = process.argv.slice(3).join(" ");
-  console.log(process.argv)
-  console.log(movie);
+movieThis = (arg) => {
   if (argChecker())  {
     axios.get("http://www.omdbapi.com/?t=mr+nobody&y=&plot=short&apikey=trilogy").then(
       function(response) {
+        console.log("=====================================================");
         console.log("Title: " + response.data.Title);
         console.log("Year: " + response.data.Year);
         console.log("IMDB Rating: " + response.data.imdbRating);
@@ -27,13 +28,15 @@ movieThis = () => {
         console.log("Produced in: " + response.data.Country);
         console.log("Movie Plot: " + response.data.Plot);
         console.log("Actors: " + response.data.Actors);
+        console.log("=====================================================");
       }
     );
 
   } else {
 
-    axios.get("http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&apikey=trilogy").then(
+    axios.get("http://www.omdbapi.com/?t=" + arg + "&y=&plot=short&apikey=trilogy").then(
       function(response) {
+        console.log("=====================================================");
         console.log("Title: " + response.data.Title);
         console.log("Year: " + response.data.Year);
         console.log("IMDB Rating: " + response.data.imdbRating);
@@ -41,37 +44,85 @@ movieThis = () => {
         console.log("Produced in: " + response.data.Country);
         console.log("Movie Plot: " + response.data.Plot);
         console.log("Actors: " + response.data.Actors);
+        console.log("=====================================================");
       }
     );
   }
 }
 
-concertThis = () => {
-let artist = process.argv.slice(3).join(" ");
+concertThis = (arg) => {
+let artist = arg;
 axios.get("https://rest.bandsintown.com/artists/" + artist + "/events?app_id=codingbootcamp").then(
   function(response){
 
+    let limit = response.data.length > 10 ? 10 : response.data.length;
 
-    console.log("Venue Name: " + response.data[0].venue.name);
-    console.log("Venue City: " + response.data[0].venue.city);
-    console.log("Event Date: " + moment(response.data[0].datetime).format('MM/DD/YYYY, h:mm a'));
+ for( var i = 0; i < limit; i++){
+
+    console.log("=====================================================");
+    console.log("Venue Name: " + response.data[i].venue.name);
+    console.log("Venue City: " + response.data[i].venue.city);
+    console.log("Event Date: " + moment(response.data[i].datetime).format('MM/DD/YYYY, h:mm a'));
+    console.log("=====================================================");
+
+   }
   }
  )
 }
 
-spotifyThisSong = () => {
-let song = process.argv.slice(3).join(" ");
-spotify
-.search({type: 'track', query: song, limit: 1})
-.then(function(response){
-   console.log(response.tracks.items[0]);
- })
+spotifyThisSong = (arg) => {
+  if (argChecker()) {
+    let song = "The Sign";
+    let artist = "Ace of Base"
+    spotify
+    .search({type:'track', query: song, limit: 1})
+    .then(function(response){
+       console.log("=====================================================");
+       console.log("Artists Name: " + response.tracks.items[0].artists[0].name);
+       console.log("The Song's Name: " + response.tracks.items[0].name);
+       console.log("Preview URL: " + response.tracks.items[0].preview_url);
+       console.log("Album: " + response.tracks.items[0].album.name);
+       console.log("=====================================================");
+     })
+  } else {
+    let song = arg;
+    spotify
+    .search({type: 'track', query: song, limit: 1})
+    .then(function(response){
+       console.log("=====================================================");
+       console.log("Artists Name: " + response.tracks.items[0].artists[0].name);
+       console.log("The Song's Name: " + response.tracks.items[0].name);
+       console.log("Preview URL: " + response.tracks.items[0].preview_url);
+       console.log("Album: " + response.tracks.items[0].album.name);
+       console.log("=====================================================");
+     })
+   }
+ }
+
+doWhatItSays = () => {
+  skipArgCheck = true
+  var data = fs.readFileSync("random.txt", "utf8");
+  data = data.replace('\r\n', '').split(", ");
+  randomNumber = Math.floor(Math.random() * data.length);
+  var randomArgs = data[randomNumber]
+  randomArgs = randomArgs.split(' "')
+  var arg1 = randomArgs[0]
+  var arg2 = randomArgs[1].replace('"', '')
+  console.log(arg1, arg2)
+  mainProcess(arg1, arg2);
 }
 
-if (process.argv[2] === "movie-this"){
-  movieThis()
-} else if (process.argv[2] === "concert-this"){
-  concertThis()
-} else if (process.argv[2] === "spotify-this-song") {
- spotifyThisSong()
+
+mainProcess = (arg1, arg2) => {
+  if (arg1 === "movie-this"){
+    movieThis(arg2);
+  } else if (arg1 === "concert-this"){
+    concertThis(arg2);
+  } else if (arg1 === "spotify-this-song") {
+   spotifyThisSong(arg2);
+   } else if (arg1 === "do-what-it-says") {
+    doWhatItSays();
+  }
 }
+
+mainProcess(process.argv[2], process.argv[3])
