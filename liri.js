@@ -33,8 +33,8 @@ movieThis = (arg) => {
     );
 
   } else {
-
-    axios.get("http://www.omdbapi.com/?t=" + arg + "&y=&plot=short&apikey=trilogy").then(
+    var movie = arg;
+    axios.get("http://www.omdbapi.com/?t=" + movie + "&y=&plot=short&apikey=trilogy").then(
       function(response) {
         console.log("=====================================================");
         console.log("Title: " + response.data.Title);
@@ -125,4 +125,4 @@ mainProcess = (arg1, arg2) => {
   }
 }
 
-mainProcess(process.argv[2], process.argv[3])
+mainProcess(process.argv[2], process.argv.slice(3).join(" "))
